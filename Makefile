@@ -53,17 +53,17 @@ generate:
 	wails generate module
 
 
-# sign:
-# 	@echo "Cleaning extended attributes..."
-# 	xattr -cr ./build/bin/Flik.app
-# 	@echo "Removing existing signature..."
-# 	codesign --remove-signature ./build/bin/Flik.app
-# 	@echo "Re-signing with entitlements..."
-# 	codesign --entitlements entitlements.plist --force --sign - --identifier com.yourcompany.workefficiency --options runtime ./build/bin/Flik.app
-# 	@echo "✓ Signed successfully"
+sign:
+	@echo "Cleaning extended attributes..."
+	xattr -cr ./build/bin/Flik.app
+	@echo "Removing existing signature..."
+	codesign --remove-signature ./build/bin/Flik.app
+	@echo "Re-signing with entitlements..."
+	codesign --entitlements entitlements.plist --force --sign - --identifier com.yourcompany.workefficiency --options runtime ./build/bin/Flik.app
+	@echo "✓ Signed successfully"
 
 run:
 	./build/bin/Flik.app/Contents/MacOS/Flik
 
 copy:
-	cp -r ./build/bin/Flik.app ~/Applications/Flik.app
+	cp -r ./build/bin/Flik.app /Applications/Flik.app
