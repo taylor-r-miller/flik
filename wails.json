@@ -1,0 +1,28 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "Flik",
+  "outputfilename": "Flik",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Taylor Miller",
+    "email": "taylor155kts@gmail.com"
+  },
+  "info": {
+    "companyName": "Your Company",
+    "productName": "Flik",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright 2025",
+    "comments": "A utility app to improve work efficiency on macOS"
+  },
+  "build": {
+    "appId": "com.yourcompany.workefficiency",
+    "darwin": {
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.plist"
+    }
+  }
+}

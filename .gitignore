@@ -1,0 +1,15 @@
+# Build artifacts
+/frontend/dist/
+
+/build/
+/frontend/node_modules/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

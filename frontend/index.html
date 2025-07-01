@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Flik</title>
+        <link rel="stylesheet" href="./src/styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="title">Flik</div>
+
+            <div class="status">
+                <div class="number-buffer" id="numberBuffer"></div>
+                <div class="mute-status" id="muteStatus">Checking...</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="help">
+                <div class="help-item">
+                    <span class="key">h</span> Move to left display
+                </div>
+                <div class="help-item">
+                    <span class="key">l</span> Move to right display
+                </div>
+                <div class="help-item">
+                    <span class="key">m</span> Toggle microphone mute
+                </div>
+                <div class="help-item">
+                    <span class="key">ESC</span> Quit application
+                </div>
+                <div class="help-item" style="margin-top: 10px; color: #666">
+                    Prefix with numbers for repetition (e.g.,
+                    <span class="key">2h</span>)
+                </div>
+            </div>
+        </div>
+
+        <script src="./src/main.js"></script>
+    </body>
+</html>
