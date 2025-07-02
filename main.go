@@ -45,6 +45,7 @@ func main() {
 			WebviewIsTransparent: true,
 			WindowIsTranslucent:  true,
 		},
+		Menu: app.createMenuBar(),
 		StartHidden: false,
 	})
 

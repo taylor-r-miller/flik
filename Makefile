@@ -57,10 +57,14 @@ sign:
 	@echo "Cleaning extended attributes..."
 	xattr -cr ./build/bin/Flik.app
 	@echo "Removing existing signature..."
-	codesign --remove-signature ./build/bin/Flik.app
+	codesign --remove-signature ./build/bin/Flik.app 2>/dev/null || true
 	@echo "Re-signing with entitlements..."
-	codesign --entitlements entitlements.plist --force --sign - --identifier com.yourcompany.workefficiency --options runtime ./build/bin/Flik.app
-	@echo "✓ Signed successfully"
+	codesign --entitlements entitlements.plist --force --sign - --identifier com.yourcompany.workefficiency --options runtime --timestamp=none ./build/bin/Flik.app
+	@echo "Verifying signature..."
+	codesign --verify --verbose ./build/bin/Flik.app
+	@echo "Checking entitlements..."
+	codesign -d --entitlements - ./build/bin/Flik.app
+	@echo "✓ Signed successfully with proper entitlements"
 
 run:
 	./build/bin/Flik.app/Contents/MacOS/Flik
