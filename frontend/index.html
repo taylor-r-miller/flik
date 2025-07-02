@@ -8,32 +8,32 @@
     </head>
     <body>
         <div class="container">
-            <div class="title">Flik</div>
+            <div class="microphone-dot" id="microphoneDot"></div>
+            <div class="escape-hint">ESC</div>
 
             <div class="status">
                 <div class="number-buffer" id="numberBuffer"></div>
-                <div class="mute-status" id="muteStatus">Checking...</div>
             </div>
 
-            <div class="divider"></div>
+            <div class="key-grid">
+                <div class="key-row single-row">
+                    <div class="key-group">
+                        <button class="key-button" data-key="h" id="key-h">H</button>
+                        <div class="key-label">Display Left</div>
+                    </div>
+                    <div class="key-group">
+                        <button class="key-button" data-key="m" id="key-m">M</button>
+                        <div class="key-label">Mute</div>
+                    </div>
+                    <div class="key-group">
+                        <button class="key-button" data-key="l" id="key-l">L</button>
+                        <div class="key-label">Display Right</div>
+                    </div>
+                </div>
+            </div>
 
-            <div class="help">
-                <div class="help-item">
-                    <span class="key">h</span> Move to left display
-                </div>
-                <div class="help-item">
-                    <span class="key">l</span> Move to right display
-                </div>
-                <div class="help-item">
-                    <span class="key">m</span> Toggle microphone mute
-                </div>
-                <div class="help-item">
-                    <span class="key">ESC</span> Quit application
-                </div>
-                <div class="help-item" style="margin-top: 10px; color: #666">
-                    Prefix with numbers for repetition (e.g.,
-                    <span class="key">2h</span>)
-                </div>
+            <div class="help-text">
+                <span class="help-hint">Press keys or use numbers (e.g., 2h)</span>
             </div>
         </div>
 

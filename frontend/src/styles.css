@@ -4,87 +4,164 @@
     box-sizing: border-box;
 }
 
+html {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family:
         -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: rgba(30, 30, 30, 0.95);
+    background: transparent !important;
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     user-select: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .container {
+    position: relative;
     text-align: center;
-    padding: 20px;
-    border-radius: 12px;
-    background: rgba(40, 40, 40, 0.8);
+    padding: 18px 48px 14px 48px;
+    border-radius: 20px;
+    background: rgba(40, 40, 40, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    min-width: 250px;
+    min-width: 420px;
+    max-width: 480px;
+    width: 450px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.microphone-dot {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #666;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.microphone-dot.active {
+    background: #4caf50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+.microphone-dot.muted {
+    background: #f44336;
+    box-shadow: 0 0 8px rgba(244, 67, 54, 0.4);
+}
+
+.escape-hint {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-size: 9px;
+    color: #666;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .title {
     font-size: 18px;
     font-weight: 600;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     color: #ffffff;
 }
 
 .status {
-    margin-bottom: 20px;
-}
-
-.number-buffer {
-    font-size: 24px;
-    font-weight: 300;
-    color: #4caf50;
-    min-height: 30px;
     margin-bottom: 10px;
 }
 
-.mute-status {
-    font-size: 14px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    display: inline-block;
-    margin-bottom: 20px;
+.number-buffer {
+    font-size: 18px;
+    font-weight: 300;
+    color: #4caf50;
+    min-height: 20px;
+    margin-bottom: 0;
 }
 
-.mute-status.muted {
-    background: #f44336;
-    color: white;
+.key-grid {
+    margin-bottom: 8px;
 }
 
-.mute-status.unmuted {
-    background: #4caf50;
-    color: white;
+.key-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+    width: 100%;
 }
 
-.help {
-    font-size: 12px;
-    color: #999;
-    line-height: 1.6;
+.key-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 }
 
-.help-item {
-    margin: 4px 0;
+.key-label {
+    font-size: 10px;
+    color: #888;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.key {
-    display: inline-block;
-    padding: 2px 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    font-family: monospace;
-    margin: 0 2px;
+.key-button {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(60, 60, 60, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 15px 0;
+.key-button:hover {
+    background: rgba(80, 80, 80, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.key-button:active,
+.key-button.pressed {
+    background: rgba(100, 100, 100, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.key-button.pressed {
+    background: rgba(200, 200, 200, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(200, 200, 200, 0.2);
+}
+
+.help-text {
+    margin-top: 8px;
+}
+
+.help-hint {
+    font-size: 10px;
+    color: #888;
+    font-style: italic;
 }

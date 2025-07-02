@@ -191,9 +191,10 @@ func (a *App) ProcessKeyPress(key string) {
 	case "m": // Toggle mute
 		a.audioManager.ToggleMute()
 	case "Escape":
-		// Quit the application
-		runtime.Quit(a.ctx)
+		// Hide the application window
+		runtime.WindowHide(a.ctx)
 		a.numberBuffer = "" // Reset on escape
+		return // Don't hide again at the end
 	}
 	runtime.WindowHide(a.ctx)
 }

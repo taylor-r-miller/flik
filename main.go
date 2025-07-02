@@ -20,12 +20,15 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "Flik",
-		Width:  500,
-		Height: 500,
+		Width:  450,
+		Height: 145,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
+		Frameless:        true,
+		AlwaysOnTop:      false,
+		DisableResize:    true,
 		OnStartup:        app.startup,
 		OnDomReady:       app.domReady,
 		SingleInstanceLock: &options.SingleInstanceLock{
@@ -45,7 +48,7 @@ func main() {
 			WebviewIsTransparent: true,
 			WindowIsTranslucent:  true,
 		},
-		Menu: app.createMenuBar(),
+		Menu:        app.createMenuBar(),
 		StartHidden: false,
 	})
 

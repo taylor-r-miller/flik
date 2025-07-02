@@ -103,25 +103,25 @@ async function updateStatus() {
     const numberBuffer = document.getElementById("numberBuffer");
     numberBuffer.textContent = status.numberBuffer || "";
 
-    // Update mute status
-    const muteStatus = document.getElementById("muteStatus");
+    // Update microphone dot
+    const microphoneDot = document.getElementById("microphoneDot");
     if (status.isMuted) {
-      muteStatus.textContent = "🔇 Microphone Muted";
-      muteStatus.className = "mute-status muted";
+      microphoneDot.className = "microphone-dot muted";
     } else {
-      muteStatus.textContent = "🎤 Microphone Active";
-      muteStatus.className = "mute-status unmuted";
+      microphoneDot.className = "microphone-dot active";
     }
   } catch (error) {
     console.error("Error updating status:", error);
-    // Show error state instead of leaving "Checking..."
-    const muteStatus = document.getElementById("muteStatus");
-    muteStatus.textContent = "⚠️ Backend Error";
-    muteStatus.className = "mute-status error";
+    // Show error state for microphone dot
+    const microphoneDot = document.getElementById("microphoneDot");
+    microphoneDot.className = "microphone-dot";
   }
 }
 
-// Handle keyboard events
+// Track which keys are currently pressed
+const pressedKeys = new Set();
+
+// Handle keyboard events - visual feedback on keydown
 document.addEventListener("keydown", async (event) => {
   event.preventDefault();
 
@@ -139,20 +139,60 @@ document.addEventListener("keydown", async (event) => {
 
   // Only process valid keys
   const validKeys = [
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "h",
-    "l",
-    "m",
-    "Escape",
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "h", "l", "m", "Escape"
+  ];
+  if (!validKeys.includes(key)) {
+    return;
+  }
+
+  // Prevent key repeat - only process if not already pressed
+  if (pressedKeys.has(key)) {
+    return;
+  }
+  
+  pressedKeys.add(key);
+
+  // Show visual feedback for key buttons
+  const keyButton = document.getElementById(`key-${key}`);
+  if (keyButton) {
+    keyButton.classList.add("pressed");
+  }
+});
+
+// Handle keyboard events - execute action on keyup
+document.addEventListener("keyup", async (event) => {
+  event.preventDefault();
+
+  // Get the key released
+  let key = event.key;
+
+  // Handle special keys
+  if (key === "Escape") {
+    key = "Escape";
+  } else if (key === "ArrowLeft") {
+    key = "h";
+  } else if (key === "ArrowRight") {
+    key = "l";
+  }
+
+  // Only process if this key was pressed
+  if (!pressedKeys.has(key)) {
+    return;
+  }
+
+  pressedKeys.delete(key);
+
+  // Remove visual feedback
+  const keyButton = document.getElementById(`key-${key}`);
+  if (keyButton) {
+    keyButton.classList.remove("pressed");
+  }
+
+  // Only process valid keys
+  const validKeys = [
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "h", "l", "m", "Escape"
   ];
   if (!validKeys.includes(key)) {
     return;
@@ -166,6 +206,31 @@ document.addEventListener("keydown", async (event) => {
     await updateStatus();
   } catch (error) {
     console.error("Error processing key press:", error);
+  }
+});
+
+// Handle mouse clicks on key buttons
+document.addEventListener("click", async (event) => {
+  if (event.target.classList.contains("key-button")) {
+    const key = event.target.dataset.key;
+    
+    // Add visual feedback
+    event.target.classList.add("pressed");
+    
+    // Remove feedback after a short delay
+    setTimeout(() => {
+      event.target.classList.remove("pressed");
+    }, 150);
+    
+    try {
+      // Send key press to backend
+      await window.go.main.App.ProcessKeyPress(key);
+      
+      // Update UI
+      await updateStatus();
+    } catch (error) {
+      console.error("Error processing key press:", error);
+    }
   }
 });
 
