@@ -19,40 +19,6 @@ func NewManager() *Manager {
 	return m
 }
 
-// ToggleMute toggles the microphone mute state
-func (m *Manager) ToggleMute() error {
-	// Use AppleScript to toggle microphone mute
-	// This works with the system-wide microphone setting
-	script := `
-	on getMicVolume()
-		input volume of (get volume settings)
-	end getMicVolume
-
-	on setMicVolume(vol)
-		set volume input volume vol
-	end setMicVolume
-
-	if getMicVolume() = 0 then
-		setMicVolume(100)
-		return "unmuted"
-	else
-		setMicVolume(0)
-		return "muted"
-	end if
-	`
-
-	cmd := exec.Command("osascript", "-e", script)
-	output, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("failed to toggle mute: %w", err)
-	}
-
-	result := strings.TrimSpace(string(output))
-	m.isMuted = result == "muted"
-
-	return nil
-}
-
 // IsMuted returns the current mute state
 func (m *Manager) IsMuted() bool {
 	return m.isMuted
@@ -79,7 +45,7 @@ func (m *Manager) SetInputVolume(volume int) error {
 	if volume < 0 {
 		volume = 0
 	} else if volume > 100 {
-		volume = 100
+		volume = 70
 	}
 
 	script := fmt.Sprintf("set volume input volume %d", volume)
@@ -110,4 +76,17 @@ func (m *Manager) GetInputVolume() (int, error) {
 	}
 
 	return volume, nil
+}
+
+func (m *Manager) ToggleMute() error {
+	if m.isMuted {
+		if err := m.SetInputVolume(70); err != nil {
+			return err
+		}
+	} else {
+		if err := m.SetInputVolume(0); err != nil {
+			return err
+		}
+	}
+	return nil
 }

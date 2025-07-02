@@ -47,10 +47,10 @@ func (a *App) logf(level LogLevel, format string, args ...interface{}) {
 	case LogLevelError:
 		prefix = "ERROR"
 	}
-	
+
 	message := fmt.Sprintf(format, args...)
 	log.Printf("[%s] %s", prefix, message)
-	
+
 	// Show user-visible notifications for warnings and errors
 	if level >= LogLevelWarn && a.ctx != nil {
 		go func() {
@@ -58,7 +58,7 @@ func (a *App) logf(level LogLevel, format string, args ...interface{}) {
 			if level == LogLevelError {
 				title = "Flik Error"
 			}
-			
+
 			runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 				Type:    runtime.InfoDialog,
 				Title:   title,
@@ -73,33 +73,33 @@ func (a *App) setupHotkey() {
 	if !permissions.CheckAccessibilityPermissions() {
 		a.logf(LogLevelWarn, "accessibility permissions not granted")
 		a.showPermissionError("Flik needs accessibility permissions to register global hotkeys.\n\nPlease:\n1. Open System Preferences\n2. Go to Security & Privacy > Privacy > Accessibility\n3. Click the lock to make changes\n4. Add Flik to the list and enable it\n5. Restart Flik")
-		
+
 		// Optionally request permissions (shows system dialog)
 		permissions.RequestAccessibilityPermissions()
 		return
 	}
 
 	hk := hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeySpace)
-	
+
 	// Retry hotkey registration with exponential backoff
 	maxRetries := 3
 	retryDelay := time.Second
-	
+
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		err := hk.Register()
 		if err == nil {
 			a.logf(LogLevelInfo, "global hotkey (Ctrl+Space) registered successfully")
 			break
 		}
-		
+
 		a.logf(LogLevelWarn, "hotkey registration attempt %d failed: %v", attempt+1, err)
-		
+
 		if attempt == maxRetries-1 {
 			a.logf(LogLevelError, "failed to register hotkey after %d attempts, continuing without hotkey support", maxRetries)
 			a.showPermissionError("Global hotkey registration failed despite having permissions. This may be a system issue. Please try restarting the app.")
 			return
 		}
-		
+
 		time.Sleep(retryDelay)
 		retryDelay *= 2
 	}
@@ -140,8 +140,7 @@ func (a *App) startup(ctx context.Context) {
 	// Show window immediately when app starts
 	runtime.WindowShow(ctx)
 	runtime.WindowCenter(ctx)
-	
-	
+
 	go mainthread.Init(func() { a.setupHotkey() })
 }
 
@@ -221,7 +220,7 @@ func (a *App) showPermissionError(message string) {
 // createMenuBar creates the application menu bar
 func (a *App) createMenuBar() *menu.Menu {
 	appMenu := menu.NewMenu()
-	
+
 	// File menu
 	fileMenu := appMenu.AddSubmenu("Flik")
 	fileMenu.AddText("Show Flik", keys.CmdOrCtrl("space"), func(_ *menu.CallbackData) {
@@ -231,7 +230,7 @@ func (a *App) createMenuBar() *menu.Menu {
 	fileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 		runtime.Quit(a.ctx)
 	})
-	
+
 	// Help menu
 	helpMenu := appMenu.AddSubmenu("Help")
 	helpMenu.AddText("Check Permissions", nil, func(_ *menu.CallbackData) {
@@ -245,7 +244,7 @@ func (a *App) createMenuBar() *menu.Menu {
 			a.showPermissionError("❌ Accessibility permissions are NOT granted.\n\nTo enable global hotkeys:\n1. Open System Preferences\n2. Go to Security & Privacy > Privacy > Accessibility\n3. Click the lock to make changes\n4. Add Flik and enable it\n5. Restart Flik")
 		}
 	})
-	
+
 	return appMenu
 }
 
@@ -256,7 +255,7 @@ func (a *App) showWindow() {
 		runtime.WindowUnminimise(a.ctx)
 		runtime.WindowSetAlwaysOnTop(a.ctx, true)
 		runtime.WindowCenter(a.ctx)
-		
+
 		// Reset always on top after a brief moment
 		go func() {
 			time.Sleep(100 * time.Millisecond)
