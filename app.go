@@ -19,12 +19,23 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
+// HotkeyStatus represents the current state of hotkey functionality
+type HotkeyStatus string
+
+const (
+	HotkeyStatusDisabled HotkeyStatus = "disabled"
+	HotkeyStatusEnabled  HotkeyStatus = "enabled"
+	HotkeyStatusFailed   HotkeyStatus = "failed"
+	HotkeyStatusPending  HotkeyStatus = "pending"
+)
+
 // App struct
 type App struct {
 	ctx          context.Context
 	numberBuffer string
 	displayMover *display.Mover
 	audioManager *audio.Manager
+	hotkeyStatus HotkeyStatus
 }
 
 // LogLevel represents different logging levels
@@ -69,26 +80,73 @@ func (a *App) logf(level LogLevel, format string, args ...interface{}) {
 }
 
 func (a *App) setupHotkey() {
-	// Check accessibility permissions first
-	if !permissions.CheckAccessibilityPermissions() {
-		a.logf(LogLevelWarn, "accessibility permissions not granted")
-		a.showPermissionError("Flik needs accessibility permissions to register global hotkeys.\n\nPlease:\n1. Open System Preferences\n2. Go to Security & Privacy > Privacy > Accessibility\n3. Click the lock to make changes\n4. Add Flik to the list and enable it\n5. Restart Flik")
+	a.hotkeyStatus = HotkeyStatusPending
 
-		// Optionally request permissions (shows system dialog)
-		permissions.RequestAccessibilityPermissions()
+	// Create a context with timeout to prevent hanging
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Check accessibility permissions with timeout
+	permissionsChan := make(chan bool, 1)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				a.logf(LogLevelError, "permission check panicked: %v", r)
+				permissionsChan <- false
+			}
+		}()
+		permissionsChan <- permissions.CheckAccessibilityPermissions()
+	}()
+
+	var hasPermissions bool
+	select {
+	case hasPermissions = <-permissionsChan:
+	case <-ctx.Done():
+		a.logf(LogLevelError, "permission check timed out, continuing without hotkey support")
+		a.hotkeyStatus = HotkeyStatusFailed
+		return
+	}
+
+	if !hasPermissions {
+		a.logf(LogLevelWarn, "accessibility permissions not granted")
+		a.hotkeyStatus = HotkeyStatusDisabled
+		
+		// Non-blocking permission request
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					a.logf(LogLevelError, "permission request panicked: %v", r)
+				}
+			}()
+			permissions.RequestAccessibilityPermissions()
+		}()
+		
+		a.showPermissionError("Flik needs accessibility permissions to register global hotkeys.\n\nPlease:\n1. Open System Preferences\n2. Go to Security & Privacy > Privacy > Accessibility\n3. Click the lock to make changes\n4. Add Flik to the list and enable it\n5. Restart Flik")
 		return
 	}
 
 	hk := hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeySpace)
 
-	// Retry hotkey registration with exponential backoff
+	// Retry hotkey registration with exponential backoff and timeout
 	maxRetries := 3
 	retryDelay := time.Second
+	maxSetupTime := 15 * time.Second
+	setupCtx, setupCancel := context.WithTimeout(ctx, maxSetupTime)
+	defer setupCancel()
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
+		select {
+		case <-setupCtx.Done():
+			a.logf(LogLevelError, "hotkey setup timed out after %v, continuing without hotkey support", maxSetupTime)
+			a.hotkeyStatus = HotkeyStatusFailed
+			return
+		default:
+		}
+
 		err := hk.Register()
 		if err == nil {
 			a.logf(LogLevelInfo, "global hotkey (Ctrl+Space) registered successfully")
+			a.hotkeyStatus = HotkeyStatusEnabled
 			break
 		}
 
@@ -96,31 +154,48 @@ func (a *App) setupHotkey() {
 
 		if attempt == maxRetries-1 {
 			a.logf(LogLevelError, "failed to register hotkey after %d attempts, continuing without hotkey support", maxRetries)
+			a.hotkeyStatus = HotkeyStatusFailed
 			a.showPermissionError("Global hotkey registration failed despite having permissions. This may be a system issue. Please try restarting the app.")
 			return
 		}
 
-		time.Sleep(retryDelay)
+		// Sleep with context cancellation support
+		select {
+		case <-time.After(retryDelay):
+		case <-setupCtx.Done():
+			a.logf(LogLevelError, "hotkey setup cancelled during retry delay")
+			a.hotkeyStatus = HotkeyStatusFailed
+			return
+		}
 		retryDelay *= 2
+	}
+
+	if a.hotkeyStatus != HotkeyStatusEnabled {
+		return
 	}
 
 	// Hotkey registration successful, start listening
 	a.logf(LogLevelInfo, "listening for global hotkey events")
 	for {
-		<-hk.Keydown()
-		a.logf(LogLevelInfo, "global hotkey activated, showing window")
+		select {
+		case <-hk.Keydown():
+			a.logf(LogLevelInfo, "global hotkey activated, showing window")
 
-		// Foreground the application window
-		runtime.WindowShow(a.ctx)
-		runtime.WindowUnminimise(a.ctx)
-		runtime.WindowSetAlwaysOnTop(a.ctx, true)
-		runtime.WindowCenter(a.ctx)
+			// Foreground the application window
+			runtime.WindowShow(a.ctx)
+			runtime.WindowUnminimise(a.ctx)
+			runtime.WindowSetAlwaysOnTop(a.ctx, true)
+			runtime.WindowCenter(a.ctx)
 
-		// Reset always on top after a brief moment
-		go func() {
-			time.Sleep(100 * time.Millisecond)
-			runtime.WindowSetAlwaysOnTop(a.ctx, false)
-		}()
+			// Reset always on top after a brief moment
+			go func() {
+				time.Sleep(100 * time.Millisecond)
+				runtime.WindowSetAlwaysOnTop(a.ctx, false)
+			}()
+		case <-ctx.Done():
+			a.logf(LogLevelInfo, "hotkey listener shutting down")
+			return
+		}
 	}
 }
 
@@ -130,6 +205,7 @@ func NewApp() *App {
 		displayMover: display.NewMover(),
 		audioManager: audio.NewManager(),
 		numberBuffer: "",
+		hotkeyStatus: HotkeyStatusDisabled,
 	}
 }
 
@@ -194,7 +270,7 @@ func (a *App) ProcessKeyPress(key string) {
 		// Hide the application window
 		runtime.WindowHide(a.ctx)
 		a.numberBuffer = "" // Reset on escape
-		return // Don't hide again at the end
+		return              // Don't hide again at the end
 	}
 	runtime.WindowHide(a.ctx)
 }
@@ -202,8 +278,9 @@ func (a *App) ProcessKeyPress(key string) {
 // GetStatus returns the current status for the UI
 func (a *App) GetStatus() map[string]interface{} {
 	return map[string]interface{}{
-		"numberBuffer": a.numberBuffer,
-		"isMuted":      a.audioManager.IsMuted(),
+		"numberBuffer":  a.numberBuffer,
+		"isMuted":       a.audioManager.IsMuted(),
+		"hotkeyStatus":  string(a.hotkeyStatus),
 	}
 }
 
