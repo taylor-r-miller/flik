@@ -12,9 +12,11 @@
     <true/>
     <key>com.apple.security.device.audio-input</key>
     <true/>
-    <key>com.apple.security.cs.allow-jit</key>
+    <key>com.apple.security.scripting-targets.system-events</key>
     <true/>
-    <key>com.apple.security.cs.disable-library-validation</key>
-    <true/>
+    <key>com.apple.security.temporary-exception.apple-events</key>
+    <array>
+        <string>com.apple.systemevents</string>
+    </array>
 </dict>
 </plist>

@@ -205,3 +205,10 @@ func (m *Mover) GetConfiguration() ([]Display, error) {
 
 	return displays, nil
 }
+
+// GetCurrentMousePosition returns the current mouse coordinates
+func (m *Mover) GetCurrentMousePosition() (float64, float64) {
+	var x, y C.double
+	C.getCurrentMousePosition(&x, &y)
+	return float64(x), float64(y)
+}

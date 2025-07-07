@@ -17,7 +17,8 @@
     "copyright": "Copyright 2025",
     "comments": "A utility app to improve work efficiency on macOS",
     "NSMicrophoneUsageDescription": "Flik needs microphone access to control microphone muting/unmuting for work efficiency.",
-    "NSAccessibilityUsageDescription": "Flik needs accessibility access to register global hotkeys and control window focus for improved efficiency."
+    "NSAccessibilityUsageDescription": "Flik needs accessibility access to register global hotkeys and control window focus for improved efficiency.",
+    "NSAppleEventsUsageDescription": "Flik needs Apple Events access to navigate between virtual desktops and control system features for enhanced workflow efficiency."
   },
   "build": {
     "appId": "com.yourcompany.workefficiency",

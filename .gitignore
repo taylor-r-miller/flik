@@ -13,3 +13,5 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+flik-debug.log
+flik-installed-debug.log

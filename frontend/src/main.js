@@ -110,11 +110,55 @@ async function updateStatus() {
     } else {
       microphoneDot.className = "microphone-dot active";
     }
+
+    // Update key mappings based on mode
+    updateModeDisplay(status.currentMode || "main");
   } catch (error) {
     console.error("Error updating status:", error);
     // Show error state for microphone dot
     const microphoneDot = document.getElementById("microphoneDot");
     microphoneDot.className = "microphone-dot";
+  }
+}
+
+// Update key mappings based on current mode
+function updateModeDisplay(mode) {
+  const leftButton = document.getElementById("key-left");
+  const rightButton = document.getElementById("key-right");
+  const leftLabel = document.getElementById("label-left");
+  const rightLabel = document.getElementById("label-right");
+
+  // Update key mappings based on mode
+  switch (mode) {
+    case "main":
+      leftButton.textContent = "W";
+      leftButton.dataset.key = "w";
+      leftLabel.textContent = "Window";
+      
+      rightButton.textContent = "D";
+      rightButton.dataset.key = "d";
+      rightLabel.textContent = "Display";
+      break;
+      
+    case "window":
+      leftButton.textContent = "H";
+      leftButton.dataset.key = "h";
+      leftLabel.textContent = "Space Left";
+      
+      rightButton.textContent = "L";
+      rightButton.dataset.key = "l";
+      rightLabel.textContent = "Space Right";
+      break;
+      
+    case "display":
+      leftButton.textContent = "H";
+      leftButton.dataset.key = "h";
+      leftLabel.textContent = "Display Left";
+      
+      rightButton.textContent = "L";
+      rightButton.dataset.key = "l";
+      rightLabel.textContent = "Display Right";
+      break;
   }
 }
 
@@ -140,7 +184,7 @@ document.addEventListener("keydown", async (event) => {
   // Only process valid keys
   const validKeys = [
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-    "h", "l", "m", "Escape"
+    "h", "l", "m", "w", "d", "b", "Escape"
   ];
   if (!validKeys.includes(key)) {
     return;
@@ -154,7 +198,18 @@ document.addEventListener("keydown", async (event) => {
   pressedKeys.add(key);
 
   // Show visual feedback for key buttons
-  const keyButton = document.getElementById(`key-${key}`);
+  let keyButton = document.getElementById(`key-${key}`);
+  
+  // Handle dynamic key mapping for visual feedback
+  if (!keyButton) {
+    if (key === "h" || key === "w") {
+      keyButton = document.getElementById("key-left");
+    } else if (key === "l" || key === "d") {
+      keyButton = document.getElementById("key-right");
+    }
+    // Note: 'b' key doesn't have a visual button representation
+  }
+  
   if (keyButton) {
     keyButton.classList.add("pressed");
   }
@@ -184,7 +239,18 @@ document.addEventListener("keyup", async (event) => {
   pressedKeys.delete(key);
 
   // Remove visual feedback
-  const keyButton = document.getElementById(`key-${key}`);
+  let keyButton = document.getElementById(`key-${key}`);
+  
+  // Handle dynamic key mapping for visual feedback
+  if (!keyButton) {
+    if (key === "h" || key === "w") {
+      keyButton = document.getElementById("key-left");
+    } else if (key === "l" || key === "d") {
+      keyButton = document.getElementById("key-right");
+    }
+    // Note: 'b' key doesn't have a visual button representation
+  }
+  
   if (keyButton) {
     keyButton.classList.remove("pressed");
   }
@@ -192,7 +258,7 @@ document.addEventListener("keyup", async (event) => {
   // Only process valid keys
   const validKeys = [
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-    "h", "l", "m", "Escape"
+    "h", "l", "m", "w", "d", "b", "Escape"
   ];
   if (!validKeys.includes(key)) {
     return;
@@ -237,20 +303,33 @@ document.addEventListener("click", async (event) => {
 // Global variable for periodic updates
 let intervalId = null;
 
-// Handle dock icon clicks by listening for window focus events
-window.addEventListener('focus', () => {
-  console.log('Window gained focus - possibly from dock icon click');
+// Debouncing for app activation events
+let lastActivationTime = 0;
+const ACTIVATION_DEBOUNCE_MS = 1000; // Only allow activation events every 1 second
+
+function handleAppActivation(source) {
+  const now = Date.now();
+  if (now - lastActivationTime < ACTIVATION_DEBOUNCE_MS) {
+    console.log(`App activation from ${source} debounced - too soon after last activation`);
+    return;
+  }
+  
+  lastActivationTime = now;
+  console.log(`App activation from ${source} - repositioning window`);
+  
   if (window.runtime && window.runtime.EventsEmit) {
     window.runtime.EventsEmit('app:activate');
   }
+}
+
+// Handle dock icon clicks by listening for window focus events
+window.addEventListener('focus', () => {
+  handleAppActivation('window focus');
 });
 
 // Handle macOS specific app activation events
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
-    console.log('Document became visible - handling potential dock activation');
-    if (window.runtime && window.runtime.EventsEmit) {
-      window.runtime.EventsEmit('app:activate');
-    }
+    handleAppActivation('visibility change');
   }
 });
